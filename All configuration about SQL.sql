@@ -123,6 +123,7 @@ VALUES
 
 SELECT * FROM Books;
 
+-- These are trash scripts
 CREATE TABLE Borrows (
   borrow_id INT AUTO_INCREMENT PRIMARY KEY,
   student_id INT NOT NULL,
@@ -323,6 +324,8 @@ DROP TABLE IF EXISTS Fines;
 DROP TABLE IF EXISTS Announcements;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- Delect all gave done
 
 -- Start new borrows
 
