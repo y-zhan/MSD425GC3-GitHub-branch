@@ -1,0 +1,78 @@
+.loginPage-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #eaf1ff 0%, #d4e5ff 50%, #eef6ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loginPage-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.loginPage-box {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 50px 60px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+}
+
+.loginPage-box h2 {
+  font-size: 35px;
+  font-weight: 900;
+  font-style: italic;
+  background: linear-gradient(90deg, #0048ff, #00b7ff, #57ccff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1.2px;
+  margin-bottom: 40px;
+  text-shadow: 1px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.loginPage-form {
+  text-align: left;
+}
+
+.loginPage-form .ant-form-item-label > label {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 15px;
+}
+
+.ant-input,
+.ant-input-password,
+.loginPage-select {
+  border-radius: 10px !important;
+  border: 1px solid #cdd9ff;
+  transition: all 0.3s ease;
+}
+
+.ant-input:focus,
+.ant-input-password:focus,
+.loginPage-select:focus {
+  border-color: #0048ff !important;
+  box-shadow: 0 0 8px rgba(0, 72, 255, 0.25);
+}
+
+.loginPage-button {
+  background: linear-gradient(90deg, #0048ff, #00b7ff);
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 6px 16px rgba(0, 72, 255, 0.25);
+  transition: all 0.3s ease;
+}
+
+.loginPage-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0, 72, 255, 0.35);
+  background: linear-gradient(90deg, #003eff, #0099ff);
+}

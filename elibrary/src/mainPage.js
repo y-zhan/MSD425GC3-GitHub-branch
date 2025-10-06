@@ -45,7 +45,7 @@ function MainPage() {
             type="primary"
             icon={<LoginOutlined />}
             className="mainPage-loginbutton"
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/loginPage")}
           >
             Login
           </Button>
