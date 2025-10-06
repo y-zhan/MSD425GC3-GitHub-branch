@@ -5,13 +5,15 @@ import MainPage from "./mainPage";
 import LoginPage from "./loginPage";
 
 import "antd/dist/reset.css";
+import AdminPage from "./adminPage";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<MainPage />} />
-      <Route path="/loginPage" element={<LoginPage />} />
+      {/* <Route path="/" element={<MainPage />} />
+      <Route path="/loginPage" element={<LoginPage />} /> */}
+      <Route path="/" element={<AdminPage />} />
     </Routes>
   </BrowserRouter>
 );
