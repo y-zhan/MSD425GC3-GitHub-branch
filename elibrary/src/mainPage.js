@@ -1,64 +1,82 @@
-import React from "react";
-import { Layout, Button, Input, Row, Col, Empty } from "antd";
+import React, { useState, useEffect } from "react";
+import { Layout, Button, Input, Row, Col, Empty, message } from "antd";
 import { LoginOutlined, SearchOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import "antd/dist/reset.css";
+import "./css/mainPage.css";
 
+import { getAllBooks, searchBooks } from "./api/bookApi";
 const { Header, Content } = Layout;
 
 function MainPage() {
-  // 没接 API
-  const books = null;
+  const [books, setBooks] = useState([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const navigate = useNavigate();
 
-  function handleSearch(value) {
-    console.log("Search:", value);
-  }
+  useEffect(() => {
+    async function fetchBooks() {
+      try {
+        const response = await getAllBooks();
+        setBooks(response.data);
+      } catch (error) {
+        message.error("获取书籍失败，请检查 API");
+      }
+    }
+    fetchBooks();
+  }, []);
+
+  const handleSearch = async (value) => {
+    try {
+      const response = await searchBooks(value);
+      setBooks(response.data);
+    } catch (error) {
+      message.error("搜索失败");
+    }
+  };
 
   return (
-    <Layout className="min-h-screen bg-white">
-      {/* topside */}
-      <Header className="bg-white border-b border-gray-200 px-6" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <h1 style={{ color: "white", margin: 0, fontSize: 18, fontWeight: 600 }}>E-library management system</h1>
+    <Layout className="mainPage-container">
+      <Header className="mainPage-header">
+        <div className="mainPage-leftheader">
+          <h1>E-Library Management System</h1>
         </div>
-
-        <Button type="primary" icon={<LoginOutlined />}>
-          Login
-        </Button>
-        <Button type="primary" icon={<LoginOutlined />}>
-          Sign Up
-        </Button>
+        <div className="mainPage-rightheader">
+          <Button
+            type="primary"
+            icon={<LoginOutlined />}
+            className="mainPage-loginbutton"
+            onClick={() => navigate("/login")}
+          >
+            Login
+          </Button>
+        </div>
       </Header>
 
-      {/* content */}
-      <Content className="max-w-5xl mx-auto px-4 py-8">
-
-        {/* searchbar */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+      <Content className="mainPage-midcontainer">
+        <div className="mainPage-searchbar">
           <Input.Search
             placeholder="Search by title / author / category"
-            enterButton={
-              <>
-                <SearchOutlined /> Search
-              </>
-            }
+            enterButton={<><SearchOutlined /> Search</>}
             size="large"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
             onSearch={handleSearch}
-            style={{ width: "90%", maxWidth: 800, marginTop: 50 }}
             allowClear
           />
         </div>
 
-        {/* Data Flow */}
-        <div style={{ marginTop: 16 }}>
-          <h2 style={{ fontSize: 20, marginBottom: 12, marginLeft: 14, color: "blue" }}>Data Flow</h2>
-
-          {/* 之后再补 */}
-          {books === null || (Array.isArray(books) && books.length === 0) ? (
-            <Empty description="No data yet (connect your API to show results here)" />
+        <div className="mainPage-booklist">
+          <h2>Available Books</h2>
+          {books.length === 0 ? (
+            <Empty description="No Api now" />
           ) : (
             <Row gutter={[16, 16]}>
               {books.map((book) => (
                 <Col xs={24} sm={12} md={8} lg={6} key={book.id}>
-                  {/* 之后再补 */}
+                  <div className="mainPage-booklist-card">
+                    <h3>{book.title}</h3>
+                    <p>Author: {book.author}</p>
+                  </div>
                 </Col>
               ))}
             </Row>

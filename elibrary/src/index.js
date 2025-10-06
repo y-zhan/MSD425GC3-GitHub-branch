@@ -1,9 +1,17 @@
+import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainPage from "./mainPage";
 import "antd/dist/reset.css";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<MainPage />);
+root.render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<MainPage />} />
+    </Routes>
+  </BrowserRouter>
+);
 
 
 // If you want to start measuring performance in your app, pass a function
