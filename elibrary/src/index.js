@@ -6,6 +6,7 @@ import LoginPage from "./loginPage";
 
 import "antd/dist/reset.css";
 import AdminPage from "./adminPage";
+import StudentPage from "./studentPage";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -13,7 +14,8 @@ root.render(
     <Routes>
       {/* <Route path="/" element={<MainPage />} />
       <Route path="/loginPage" element={<LoginPage />} /> */}
-      <Route path="/" element={<AdminPage />} />
+      {/* <Route path="/" element={<AdminPage />} /> */}
+      <Route path="/" element={<StudentPage />} />
     </Routes>
   </BrowserRouter>
 );
