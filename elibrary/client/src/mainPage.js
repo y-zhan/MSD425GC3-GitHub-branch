@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Layout, Button, Input, Row, Col, Empty, message } from "antd";
 import { LoginOutlined, SearchOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
 import "antd/dist/reset.css";
+import "./css/common.css"
 import "./css/mainPage.css";
-
 import { getAllBooks, searchBooks } from "./api/bookApi";
+import { useNavigate } from "react-router-dom";
+
 const { Header, Content } = Layout;
 
 function MainPage() {
@@ -13,33 +14,39 @@ function MainPage() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const navigate = useNavigate();
 
+  // Loading book data
   useEffect(() => {
-    async function fetchBooks() {
-      try {
-        const response = await getAllBooks();
-        setBooks(response.data);
-      } catch (error) {
-        message.error("获取书籍失败，请检查 API");
-      }
-    }
-    fetchBooks();
+    loadBooks();
   }, []);
 
-  const handleSearch = async (value) => {
+  const loadBooks = async () => {
     try {
-      const response = await searchBooks(value);
-      setBooks(response.data);
-    } catch (error) {
-      message.error("搜索失败");
+      // （后期改）
+      // const res = await getAllBooks();
+      // setBooks(res.data);
+      setBooks([]);
+      // （后期改）
+    } catch (err) {
+      message.error("Failed to load book");
+    }
+  };
+
+  // search book
+  const handleSearch = async () => {
+    try {
+      // （后期改）
+      // const res = await searchBooks(searchTerm);
+      // setBooks(res.data);
+      message.info(`Search keywords: ${searchKeyword}`);
+    } catch (err) {
+      message.error("Search failed");
     }
   };
 
   return (
     <Layout className="mainPage-container">
-      <Header className="mainPage-header">
-        <div className="mainPage-leftheader">
-          <h1>E-Library Management System</h1>
-        </div>
+      <Header className="common-header">
+        <h1>E-Library Management System</h1>
         <div className="mainPage-rightheader">
           <Button
             type="primary"
@@ -68,7 +75,7 @@ function MainPage() {
         <div className="mainPage-booklist">
           <h2>Available Books</h2>
           {books.length === 0 ? (
-            <Empty description="No Api now" />
+            <Empty description="There are currently no books to display" />
           ) : (
             <Row gutter={[16, 16]}>
               {books.map((book) => (
@@ -76,10 +83,12 @@ function MainPage() {
                   <div className="mainPage-booklist-card">
                     <h3>{book.title}</h3>
                     <p>Author: {book.author}</p>
+                    <p>Category: {book.category}</p>
                   </div>
                 </Col>
               ))}
             </Row>
+
           )}
         </div>
       </Content>

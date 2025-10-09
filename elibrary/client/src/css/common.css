@@ -1,0 +1,36 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.common-header {
+  background: linear-gradient(90deg, #0048ff, #006eff, #009aff);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  height: 78px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 6px 20px rgba(0, 64, 255, 0.15),
+    0 0 10px rgba(0, 128, 255, 0.25) inset;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease-in-out;
+}
+
+.common-header h1 {
+  font-size: 36px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 1.8px;
+  margin: 0;
+  background: linear-gradient(90deg, #ffffff, #d8e9ff, #a5cdff, #78afff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 8px rgba(255, 255, 255, 0.25),
+    0 0 20px rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+  transition: all 0.4s ease;
+}

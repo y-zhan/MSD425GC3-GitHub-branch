@@ -7,6 +7,7 @@ import {
   UserAddOutlined,
   UserDeleteOutlined,
 } from "@ant-design/icons";
+import "./css/common.css"
 import "./css/adminPage.css";
 import "antd/dist/reset.css";
 
@@ -111,7 +112,7 @@ function AdminPage() {
 
   return (
     <Layout className="adminPage-container">
-      <Header className="adminPage-header">
+      <Header className="common-header">
         <h1>E-Library Management System Admin Dashboard</h1>
       </Header>
 

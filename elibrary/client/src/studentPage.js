@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Layout, Table, Button, Input, Card, Modal, Select, message } from "antd";
 import { BookOutlined, ClockCircleOutlined, LogoutOutlined } from "@ant-design/icons";
+import "./css/common.css"
 import "./css/studentPage.css";
 import "antd/dist/reset.css";
 
@@ -77,7 +78,7 @@ function StudentPage() {
 
   return (
     <Layout className="studentPage-container">
-      <Header className="studentPage-header">
+      <Header className="common-header">
         <h1>E-Library Management System - Student Portal</h1>
       </Header>
 

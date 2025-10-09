@@ -6,30 +6,6 @@
   align-items: stretch;
 }
 
-.adminPage-header {
-  background: linear-gradient(90deg, #0047ff, #006bff, #0091ff);
-  padding: 0 48px;
-  height: 75px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.adminPage-header h1 {
-  font-size: 38px;
-  font-weight: 900;
-  font-style: italic;
-  background: linear-gradient(90deg, #ffffff, #cce2ff, #a0c4ff, #6ba8ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 1px 2px 10px rgba(255, 255, 255, 0.3);
-  letter-spacing: 1.5px;
-  margin: 0;
-  text-transform: uppercase;
-  transition: all 0.3s ease-in-out;
-}
-
 .adminPage-container > .ant-layout {
   flex: 1;
   display: flex;
