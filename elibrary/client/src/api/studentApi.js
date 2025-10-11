@@ -1,27 +1,31 @@
-// src/api/studentApi.js
 import apiClient from "./apiClient";
 
-// login api
-export const loginUser = async (username, password, role) => {
-  const path = role === "admin" ? "/login/admin" : "/login/student";
-  const res = await apiClient.post(path, { username, password });
+// Student Login
+export const studentLogin = async (credentials) => {
+  const res = await apiClient.post("/login/student", credentials);
   return res.data;
 };
 
-// get all borrowing records
+// Get All Borrow Records
 export const getAllBorrowRecords = async () => {
   const res = await apiClient.get("/borrow_records");
   return res.data;
 };
 
-// borrow
-export const borrowBook = async (payload) => {
-  const res = await apiClient.post("/borrow", payload);
+// Borrow Book
+export const borrowBook = async ({ user_id, book_id, days }) => {
+  const res = await apiClient.post("/borrow", { user_id, book_id, days });
   return res.data;
 };
 
-// return
-export const returnBook = async (recordId) => {
-  const res = await apiClient.put(`/borrow/return/${recordId}`);
+// Return Book
+export const returnBook = async (record_id) => {
+  const res = await apiClient.put(`/borrow/return/${record_id}`);
+  return res.data;
+};
+
+// Get Blacklist Users
+export const getBlacklist = async () => {
+  const res = await apiClient.get("/blacklist");
   return res.data;
 };

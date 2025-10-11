@@ -1,5 +1,10 @@
-// src/api/adminApi.js
 import apiClient from "./apiClient";
+
+// admin login
+export const adminLogin = async (credentials) => {
+  const res = await apiClient.post("/login/admin", credentials);
+  return res.data;
+};
 
 // get user
 export const getAllUsers = async () => {
@@ -14,14 +19,14 @@ export const getBlacklist = async () => {
 };
 
 // add user to blacklist
-export const addToBlacklist = async (data) => {
-  const res = await apiClient.post("/blacklist/add", data);
+export const addToBlacklist = async ({ user_id, reason = "Violation of rules" }) => {
+  const res = await apiClient.post("/blacklist/add", { user_id, reason });
   return res.data;
 };
 
 // remove user from blacklist
-export const removeFromBlacklist = async (userId) => {
-  const res = await apiClient.delete(`/blacklist/remove/${userId}`);
+export const removeFromBlacklist = async (user_id) => {
+  const res = await apiClient.delete(`/blacklist/remove/${user_id}`);
   return res.data;
 };
 

@@ -8,18 +8,20 @@ import {
   Modal,
   Select,
   message,
-  Pagination,
+  Space,
 } from "antd";
 import {
   BookOutlined,
   ClockCircleOutlined,
   LogoutOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { getAllBooks } from "./api/bookApi";
 import {
   borrowBook,
   returnBook,
   getAllBorrowRecords,
+  getBlacklist,
 } from "./api/studentApi";
 import { useNavigate } from "react-router-dom";
 import "./css/common.css";
@@ -29,19 +31,47 @@ import "antd/dist/reset.css";
 const { Header, Content, Sider } = Layout;
 const { Option } = Select;
 
+/**
+ * ✅ 自定义确认弹窗组件
+ */
+const ConfirmReturnModal = ({ open, onConfirm, onCancel, bookTitle }) => {
+  return (
+    <Modal
+      open={open}
+      title="Confirm Return"
+      onOk={onConfirm}
+      onCancel={onCancel}
+      okText="Confirm"
+      cancelText="Cancel"
+      closable
+    >
+      <p>
+        Are you sure you want to return <strong>{bookTitle}</strong>?
+      </p>
+    </Modal>
+  );
+};
+
 function StudentPage() {
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
   const [borrowedBooks, setBorrowedBooks] = useState([]);
   const [dueSoonBooks, setDueSoonBooks] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [user, setUser] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState("");
+
+  // 借书弹窗控制
+  const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [borrowDuration, setBorrowDuration] = useState(7);
-  const [user, setUser] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
 
-  // initialization
+  // 还书弹窗控制
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+
+  // ✅ 初始化：检查登录状态并加载数据
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) {
@@ -49,13 +79,13 @@ function StudentPage() {
       navigate("/loginPage");
       return;
     }
-    const parsed = JSON.parse(storedUser);
-    setUser(parsed);
-    fetchAllData(parsed.id);
+    const parsedUser = JSON.parse(storedUser);
+    setUser(parsedUser);
+    fetchAllData(parsedUser.id, parsedUser.username);
   }, []);
 
-  // Fetch all data
-  const fetchAllData = async (userId) => {
+  // ✅ 数据加载
+  const fetchAllData = async (userId, username) => {
     try {
       setLoading(true);
       const [bookRes, recordRes] = await Promise.all([
@@ -63,18 +93,16 @@ function StudentPage() {
         getAllBorrowRecords(),
       ]);
 
-      const allBooks = bookRes.data || [];
-      const allRecords = recordRes.data || [];
+      const allBooks = bookRes.data || bookRes || [];
+      const allRecords = recordRes.data || recordRes || [];
 
-      const myRecords = allRecords.filter(
-        (r) => r.username === user?.username
-      );
+      const myRecords = allRecords.filter((r) => r.username === username);
 
       setBorrowedBooks(
         myRecords
           .filter((r) => r.status === "borrowed")
           .map((r) => ({
-            id: r.id ?? r.record_id ?? r.key,
+            id: r.id,
             title: r.title,
             borrowDate: r.borrow_date,
             returnDate: r.return_date,
@@ -85,87 +113,137 @@ function StudentPage() {
       const now = new Date();
       const dueSoon = myRecords
         .filter((r) => {
+          if (!r.return_date) return false;
           const diffDays = Math.ceil(
             (new Date(r.return_date) - now) / (1000 * 60 * 60 * 24)
           );
           return diffDays <= 2 && r.status === "borrowed";
         })
         .map((r) => ({
-          id: r.id ?? r.record_id ?? r.key,
+          id: r.id,
           title: r.title,
           returnDate: r.return_date,
           daysLeft: Math.ceil(
             (new Date(r.return_date) - now) / (1000 * 60 * 60 * 24)
           ),
         }));
-      setDueSoonBooks(dueSoon);
 
+      setDueSoonBooks(dueSoon);
       setBooks(allBooks.filter((b) => b.available));
     } catch (err) {
-      console.error(err);
-      message.error("Failed to load data, please check backend connection");
+      console.error("❌ Fetch error:", err);
+      message.error("Failed to load data.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Borrow book
-  const handleBorrowClick = (book) => {
-    setSelectedBook(book);
-    setIsModalOpen(true);
-  };
-
-  const handleBorrowConfirm = async () => {
+  // ✅ 借书弹窗
+  const handleBorrowClick = async (book) => {
     try {
-      if (!user) return message.warning("Please log in again");
-      await borrowBook({
-        user_id: user.id,
-        book_id: selectedBook.id,
-        days: borrowDuration,
-      });
-      message.success(
-        `Successfully borrowed "${selectedBook.title}" for ${borrowDuration} days`
-      );
-      setIsModalOpen(false);
-      fetchAllData(user.id);
+      // 黑名单检测
+      const blacklistRes = await getBlacklist();
+      const list = blacklistRes.data || [];
+      const isBlacklisted = list.some((u) => u.username === user.username);
+      if (isBlacklisted) {
+        Modal.warning({
+          title: "Borrowing Restricted",
+          icon: <ExclamationCircleOutlined />,
+          content: "Your credit score is too low to borrow books.",
+        });
+        return;
+      }
+
+      setSelectedBook(book);
+      setIsBorrowModalOpen(true);
     } catch (err) {
-      console.error(err);
-      message.error("Failed to borrow the book");
+      console.error("Blacklist check failed:", err);
+      message.error("Unable to verify blacklist status.");
     }
   };
 
-  // Return book
-  const handleReturnBook = (record) => {
-    const recordId = record?.id ?? record?.record_id ?? record?.key;
-    if (!recordId) {
-      message.error("Unable to identify record ID, please refresh the page.");
+  // ✅ 确认借书
+  const handleBorrowConfirm = async () => {
+    if (!user || !selectedBook?.id) {
+      message.warning("Please re-login before borrowing.");
       return;
     }
 
-    Modal.confirm({
-      title: "Confirm Return",
-      content: `Are you sure you want to return "${record.title}"?`,
-      onOk: async () => {
-        try {
-          await returnBook(recordId);
-          message.success(`"${record.title}" has been successfully returned`);
-          fetchAllData(user.id);
-        } catch (err) {
-          console.error(err);
-          message.error("Return failed, please try again later");
-        }
-      },
-    });
+    try {
+      const payload = {
+        user_id: user.id,
+        book_id: selectedBook.id,
+        days: borrowDuration,
+      };
+      const res = await borrowBook(payload);
+
+      if (res?.message?.includes("borrowed successfully")) {
+        message.success(`Successfully borrowed "${selectedBook.title}"`);
+        setIsBorrowModalOpen(false);
+        fetchAllData(user.id, user.username);
+      } else {
+        Modal.warning({
+          title: "Borrow Failed",
+          content: res?.error || "Failed to borrow the book.",
+        });
+      }
+    } catch (err) {
+      console.error("Borrow error:", err);
+      message.error("Failed to borrow the book.");
+    }
   };
 
-  // Logout
+  // ✅ 打开还书确认弹窗
+  const handleReturnBook = (record) => {
+    console.log("🟨 Return clicked:", record);
+    setSelectedRecord(record);
+    setIsReturnModalOpen(true);
+  };
+
+  // ✅ 确认还书操作（真正触发 PUT 请求）
+  const handleConfirmReturn = async () => {
+    const record = selectedRecord;
+    if (!record?.id) {
+      message.error("Cannot identify borrow record ID.");
+      return;
+    }
+
+    try {
+      console.log("📡 Sending PUT request for record:", record.id);
+      const res = await returnBook(record.id);
+      console.log("✅ Lambda response:", res);
+
+      if (res?.message?.includes("returned successfully")) {
+        message.success(`"${record.title}" returned successfully ✅`);
+        setIsReturnModalOpen(false);
+        fetchAllData(user.id, user.username);
+      } else {
+        message.error(res?.error || "Return failed");
+      }
+    } catch (err) {
+      console.error("❌ Return error:", err);
+      message.error("Failed to return the book.");
+    }
+  };
+
+  // ✅ 搜索过滤
+  const filteredBooks = books.filter((b) => {
+    const keyword = searchKeyword.toLowerCase();
+    return (
+      b.title?.toLowerCase().includes(keyword) ||
+      b.author?.toLowerCase().includes(keyword) ||
+      b.category?.toLowerCase().includes(keyword)
+    );
+  });
+
+  // ✅ 登出
   const handleLogout = () => {
     localStorage.removeItem("user");
-    message.info("Logged out successfully");
+    message.info("Logged out");
     navigate("/");
   };
 
-  // Table Columns
+  // ✅ 表格列定义
   const bookColumns = [
     { title: "Book Name", dataIndex: "title", key: "title" },
     { title: "Author", dataIndex: "author", key: "author" },
@@ -207,22 +285,9 @@ function StudentPage() {
         </span>
       ),
     },
-    {
-      title: "Action",
-      render: (_, record) => (
-        <Button danger onClick={() => handleReturnBook(record)}>
-          Return
-        </Button>
-      ),
-    },
   ];
 
-  // Pagination Handler
-  const pageSize = 13;
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const currentBooks = books.slice(startIndex, endIndex);
-
+  // ✅ 页面布局
   return (
     <Layout className="studentPage-container">
       <Header className="common-header">
@@ -238,103 +303,85 @@ function StudentPage() {
       </Header>
 
       <Layout>
-        {/* Left Section*/}
+        {/* 左侧：可借书籍 */}
         <Sider width="60%" className="studentPage-left">
           <Card
             title={
-              <span>
-                <BookOutlined /> Available Books
-              </span>
+              <Space>
+                <BookOutlined />
+                <span>Available Books</span>
+              </Space>
             }
-            bordered={false}
+            variant="borderless"
           >
-            <Input.Search
-              placeholder="Search books by title / author / category"
-              allowClear
-              className="studentPage-search"
+            <div className="studentPage-search-area">
+              <Input.Search
+                placeholder="Search books by title / author / category"
+                allowClear
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+              />
+            </div>
+            <Table
+              dataSource={filteredBooks}
+              columns={bookColumns}
+              loading={loading}
+              rowKey={(r) => r.id ?? r.key}
+              pagination={{ pageSize: 10 }}
             />
-
-            <div className="studentPage-table-container">
-              <Table
-                dataSource={currentBooks}
-                columns={bookColumns}
-                loading={loading}
-                rowKey="id"
-                pagination={false}
-                className="studentPage-table"
-              />
-            </div>
-
-            {/* Pagination */}
-            <div className="studentPage-pagination">
-              <Pagination
-                current={currentPage}
-                total={books.length}
-                pageSize={pageSize}
-                onChange={(page) => setCurrentPage(page)}
-                showSizeChanger={false}
-              />
-            </div>
           </Card>
         </Sider>
 
-        {/* Right Section*/}
+        {/* 右侧：借阅信息 */}
         <Content className="studentPage-right">
-          <div className="studentPage-righttop">
-            <Card title="My Borrowed Books" bordered={false}>
-              <p>
-                <strong>Username:</strong> {user?.username}
-              </p>
-              <p>
-                <strong>Status:</strong> Active
-              </p>
-              <Table
-                dataSource={borrowedBooks}
-                columns={borrowedColumns}
-                loading={loading}
-                rowKey={(r) => r.id ?? r.record_id ?? r.key}
-                pagination={false}
-                size="small"
-              />
-            </Card>
-          </div>
+          <Card title="My Borrowed Books" variant="borderless">
+            <p>
+              <strong>Username:</strong> {user?.username}
+            </p>
+            <Table
+              dataSource={borrowedBooks}
+              columns={borrowedColumns}
+              rowKey={(r) => r.id ?? r.key}
+              pagination={false}
+              size="small"
+            />
+          </Card>
 
-          <div className="studentPage-rightbottom">
-            <Card
-              title={
-                <span>
-                  <ClockCircleOutlined /> Due Soon
-                </span>
-              }
-              bordered={false}
-            >
-              <Table
-                dataSource={dueSoonBooks}
-                columns={dueSoonColumns}
-                loading={loading}
-                rowKey={(r) => r.id ?? r.record_id ?? r.key}
-                pagination={false}
-                size="small"
-              />
-            </Card>
-          </div>
+          <Card
+            title={
+              <Space>
+                <ClockCircleOutlined />
+                <span>Due Soon</span>
+              </Space>
+            }
+            variant="borderless"
+            style={{ marginTop: 20 }}
+          >
+            <Table
+              dataSource={dueSoonBooks}
+              columns={dueSoonColumns}
+              rowKey={(r) => r.id ?? r.key}
+              pagination={false}
+              size="small"
+            />
+          </Card>
         </Content>
       </Layout>
 
-      {/* Borrow Modal */}
+      {/* 借书弹窗 */}
       <Modal
         title={`Borrow "${selectedBook?.title}"`}
-        open={isModalOpen}
+        open={isBorrowModalOpen}
         onOk={handleBorrowConfirm}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={() => setIsBorrowModalOpen(false)}
         okText="Confirm"
         cancelText="Cancel"
       >
         <p>Please select borrowing duration:</p>
         <Select
           value={borrowDuration}
-          className="studentPage-select"
           onChange={(v) => setBorrowDuration(v)}
+          className="studentPage-select"
         >
           <Option value={1}>1 day</Option>
           <Option value={7}>7 days</Option>
@@ -342,6 +389,14 @@ function StudentPage() {
           <Option value={21}>21 days</Option>
         </Select>
       </Modal>
+
+      {/* 还书确认弹窗 */}
+      <ConfirmReturnModal
+        open={isReturnModalOpen}
+        onConfirm={handleConfirmReturn}
+        onCancel={() => setIsReturnModalOpen(false)}
+        bookTitle={selectedRecord?.title}
+      />
     </Layout>
   );
 }

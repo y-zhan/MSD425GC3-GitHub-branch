@@ -1,3 +1,4 @@
+// src/adminPage.js
 import React, { useEffect, useState } from "react";
 import {
   Layout,
@@ -10,7 +11,6 @@ import {
   Space,
   Card,
   message,
-  Pagination,
 } from "antd";
 import {
   PlusOutlined,
@@ -20,8 +20,20 @@ import {
   UserDeleteOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
-import apiClient from "./api/apiClient";
+import {
+  getAllBooks,
+  addBook,
+  updateBook,
+  deleteBook,
+} from "./api/bookApi";
+import {
+  getAllUsers,
+  getBlacklist,
+  addToBlacklist,
+  removeFromBlacklist,
+} from "./api/adminApi";
 import { useNavigate } from "react-router-dom";
+import "./css/common.css";
 import "./css/adminPage.css";
 import "antd/dist/reset.css";
 
@@ -42,14 +54,24 @@ function AdminPage() {
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
 
-  // Pagination
-  const [bookPage, setBookPage] = useState(1);
-  const [userPage, setUserPage] = useState(1);
-  const [blackPage, setBlackPage] = useState(1);
-  const bookPageSize = 13;
-  const userPageSize = 4;
-  const blackPageSize = 4;
+  // ✅ 新的 useModal Hook（React19 + AntD5）
+  const [modal, contextHolder] = Modal.useModal();
 
+  // ---------- 封装异步确认 ----------
+  const showConfirm = async (title, content) => {
+    return new Promise((resolve) => {
+      modal.confirm({
+        title,
+        content,
+        okText: "Confirm",
+        cancelText: "Cancel",
+        onOk: () => resolve(true),
+        onCancel: () => resolve(false),
+      });
+    });
+  };
+
+  // ---------- 初始化 ----------
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) {
@@ -63,33 +85,27 @@ function AdminPage() {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [booksRes, usersRes, blackRes] = await Promise.all([
-        apiClient.get("/books"),
-        apiClient.get("/users"),
-        apiClient.get("/blacklist"),
+      const [bookRes, userRes, blackRes] = await Promise.all([
+        getAllBooks(),
+        getAllUsers(),
+        getBlacklist(),
       ]);
-      setBooks(booksRes.data?.data || []);
-      setUsers(usersRes.data?.data || []);
-      setBlacklist(blackRes.data?.data || []);
+      setBooks(bookRes.data || bookRes || []);
+      setUsers(userRes.data || userRes || []);
+      setBlacklist(blackRes.data || blackRes || []);
     } catch (err) {
-      console.error("Data loading failed:", err);
+      console.error("❌ Data loading failed:", err);
       message.error("Failed to load data.");
     } finally {
       setLoading(false);
     }
   };
 
-  // book Management
+  // ---------- 添加图书 ----------
   const handleAddBook = async () => {
     try {
       const values = await form.validateFields();
-      const newBook = {
-        title: values.title,
-        author: values.author,
-        category: values.category,
-        quantity: 1,
-      };
-      await apiClient.post("/books", newBook);
+      await addBook(values);
       message.success("Book added successfully");
       setIsAddModalVisible(false);
       fetchAllData();
@@ -99,85 +115,84 @@ function AdminPage() {
     }
   };
 
-  const handleEditBook = async () => {
+  // ---------- 编辑图书 ----------
+  const handleUpdateBook = async () => {
     try {
       const values = await editForm.validateFields();
-      Modal.confirm({
-        title: "Confirm Edit",
-        content: "Are you sure to update this book",
-        onOk: async () => {
-          await apiClient.put(`/books/${editingBook.id}`, values);
-          message.success("Book updated successfully");
-          setIsEditModalVisible(false);
-          fetchAllData();
-        },
-      });
+      const confirmed = await showConfirm(
+        "Confirm Edit",
+        "Are you sure you want to update this book?"
+      );
+      if (!confirmed) return;
+      await updateBook(editingBook.id, values);
+      message.success("Book updated successfully");
+      setIsEditModalVisible(false);
+      fetchAllData();
     } catch (err) {
-      console.error(err);
+      console.error("Update error:", err);
       message.error("Failed to update book");
     }
   };
 
-  const handleDeleteBook = (record) => {
-    Modal.confirm({
-      title: "Confirm Delete",
-      content: `Delete "${record.title}"?`,
-      onOk: async () => {
-        try {
-          await apiClient.delete(`/books/${record.id}`);
-          message.success("Book deleted successfully");
-          fetchAllData();
-        } catch (err) {
-          message.error("Failed to delete book");
-        }
-      },
-    });
+  // ---------- 删除图书 ----------
+  const handleDeleteBook = async (record) => {
+    const confirmed = await showConfirm(
+      "Confirm Delete",
+      `Delete "${record.title}"?`
+    );
+    if (!confirmed) return;
+    try {
+      await deleteBook(record.id);
+      message.success("Book deleted successfully");
+      fetchAllData();
+    } catch (err) {
+      console.error("Delete error:", err);
+      message.error("Failed to delete book");
+    }
   };
 
-  // blacklist
+  // ---------- 加入黑名单 ----------
   const handleAddToBlacklist = async (user) => {
-    Modal.confirm({
-      title: "Add to Blacklist",
-      content: `Add ${user.username} to blacklist?`,
-      onOk: async () => {
-        try {
-          await apiClient.post("/blacklist/add", {
-            user_id: user.id,
-            reason: "Multiple overdue returns",
-          });
-          message.warning(`${user.username} added to blacklist`);
-          fetchAllData();
-        } catch (err) {
-          message.error("Failed to add to blacklist");
-        }
-      },
-    });
+    const confirmed = await showConfirm(
+      "Add to Blacklist",
+      `Add ${user.username} to blacklist?`
+    );
+    if (!confirmed) return;
+    try {
+      await addToBlacklist({ user_id: user.id, reason: "Violation of rules" });
+      message.success(`${user.username} added to blacklist`);
+      fetchAllData();
+    } catch (err) {
+      console.error("Add blacklist error:", err);
+      message.error("Failed to add user");
+    }
   };
 
+  // ---------- 移出黑名单 ----------
   const handleRemoveFromBlacklist = async (user) => {
-    Modal.confirm({
-      title: "Remove from Blacklist",
-      content: `Remove ${user.username} from blacklist?`,
-      onOk: async () => {
-        try {
-          await apiClient.delete(`/blacklist/remove/${user.id}`);
-          message.success(`${user.username} removed from blacklist`);
-          fetchAllData();
-        } catch (err) {
-          message.error("Failed to remove user");
-        }
-      },
-    });
+    const confirmed = await showConfirm(
+      "Remove from Blacklist",
+      `Remove ${user.username} from blacklist?`
+    );
+    if (!confirmed) return;
+    try {
+      await removeFromBlacklist(user.id);
+      message.success(`${user.username} removed from blacklist`);
+      fetchAllData();
+    } catch (err) {
+      console.error("Remove blacklist error:", err);
+      message.error("Failed to remove user");
+    }
   };
 
-  // Logout 
+  // ---------- 退出 ----------
   const handleLogout = () => {
     localStorage.removeItem("user");
-    message.info("Logged out successfully");
+    message.info("Logged out");
     navigate("/");
   };
 
-  // Search / Filter
+  // ---------- 搜索过滤 ----------
   const filteredBooks = books.filter((b) => {
     const matchSearch =
       b.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -188,16 +203,39 @@ function AdminPage() {
     return matchSearch && matchCategory;
   });
 
-  // Paginated slices
-  const currentBooks = filteredBooks.slice(
-    (bookPage - 1) * bookPageSize,
-    bookPage * bookPageSize
-  );
-  const currentUsers = users.slice((userPage - 1) * userPageSize, userPage * userPageSize);
-  const currentBlacklist = blacklist.slice((blackPage - 1) * blackPageSize, blackPage * blackPageSize);
+  // ---------- 表格列 ----------
+  const bookColumns = [
+    { title: "Book Name", dataIndex: "title" },
+    { title: "Author", dataIndex: "author" },
+    { title: "Category", dataIndex: "category" },
+    {
+      title: "Action",
+      render: (_, r) => (
+        <Space>
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => {
+              setEditingBook(r);
+              editForm.setFieldsValue(r);
+              setIsEditModalVisible(true);
+            }}
+          />
+          <Button
+            icon={<DeleteOutlined />}
+            danger
+            onClick={() => handleDeleteBook(r)}
+          />
+        </Space>
+      ),
+    },
+  ];
 
+  // ---------- 渲染 ----------
   return (
     <Layout className="adminPage-container">
+      {/* 必须插入 contextHolder 才能在 React19 中渲染 Modal */}
+      {contextHolder}
+
       <Header className="common-header">
         <h1>E-Library Admin Dashboard</h1>
         <Button
@@ -211,7 +249,7 @@ function AdminPage() {
       </Header>
 
       <Layout>
-        {/* Book Management */}
+        {/* 左侧：图书管理 */}
         <Sider width="60%" className="adminPage-left">
           <Card
             title="Book Management"
@@ -245,133 +283,71 @@ function AdminPage() {
                 ))}
               </Select>
             </div>
-
-            <div className="adminPage-table-container">
+            <div className="adminPage-table-wrapper">
               <Table
-                dataSource={currentBooks}
-                columns={[
-                  { title: "Book Name", dataIndex: "title" },
-                  { title: "Author", dataIndex: "author" },
-                  { title: "Category", dataIndex: "category" },
-                  {
-                    title: "Action",
-                    render: (_, r) => (
-                      <Space>
-                        <Button
-                          icon={<EditOutlined />}
-                          onClick={() => {
-                            setEditingBook(r);
-                            editForm.setFieldsValue(r);
-                            setIsEditModalVisible(true);
-                          }}
-                        />
-                        <Button
-                          icon={<DeleteOutlined />}
-                          danger
-                          onClick={() => handleDeleteBook(r)}
-                        />
-                      </Space>
-                    ),
-                  },
-                ]}
+                dataSource={filteredBooks}
+                columns={bookColumns}
                 loading={loading}
                 rowKey="id"
-                pagination={false}
-              />
-            </div>
-
-            {/* Pagination*/}
-            <div className="adminPage-pagination">
-              <Pagination
-                current={bookPage}
-                total={filteredBooks.length}
-                pageSize={bookPageSize}
-                onChange={(p) => setBookPage(p)}
-                showSizeChanger={false}
+                pagination={{ pageSize: 10 }}
               />
             </div>
           </Card>
         </Sider>
 
-        {/* Right: User + Blacklist*/}
+        {/* 右侧：用户与黑名单 */}
         <Content className="adminPage-right">
-          {/* User Management */}
-          <Card title="User Management">
-            <div className="adminPage-table-container">
-              <Table
-                dataSource={currentUsers}
-                columns={[
-                  { title: "Username", dataIndex: "username" },
-                  { title: "Email", dataIndex: "email" },
-                  {
-                    title: "Action",
-                    render: (_, r) => (
-                      <Button
-                        type="primary"
-                        danger
-                        icon={<UserAddOutlined />}
-                        onClick={() => handleAddToBlacklist(r)}
-                      >
-                        Add to Blacklist
-                      </Button>
-                    ),
-                  },
-                ]}
-                rowKey="id"
-                pagination={false}
-              />
-            </div>
-
-            <div className="adminPage-pagination">
-              <Pagination
-                current={userPage}
-                total={users.length}
-                pageSize={userPageSize}
-                onChange={(p) => setUserPage(p)}
-                showSizeChanger={false}
-              />
-            </div>
+          <Card title="User Management" style={{ marginBottom: 24 }}>
+            <Table
+              dataSource={users}
+              columns={[
+                { title: "Username", dataIndex: "username" },
+                { title: "Email", dataIndex: "email" },
+                {
+                  title: "Action",
+                  render: (_, r) => (
+                    <Button
+                      type="primary"
+                      danger
+                      icon={<UserAddOutlined />}
+                      onClick={() => handleAddToBlacklist(r)}
+                    >
+                      Add to Blacklist
+                    </Button>
+                  ),
+                },
+              ]}
+              rowKey="id"
+              pagination={{ pageSize: 5 }}
+            />
           </Card>
 
-          {/* Blacklist */}
           <Card title="Blacklist">
-            <div className="adminPage-table-container">
-              <Table
-                dataSource={currentBlacklist}
-                columns={[
-                  { title: "Username", dataIndex: "username" },
-                  { title: "Reason", dataIndex: "reason" },
-                  {
-                    title: "Action",
-                    render: (_, r) => (
-                      <Button
-                        icon={<UserDeleteOutlined />}
-                        onClick={() => handleRemoveFromBlacklist(r)}
-                      >
-                        Remove
-                      </Button>
-                    ),
-                  },
-                ]}
-                rowKey="id"
-                pagination={false}
-              />
-            </div>
-
-            <div className="adminPage-pagination">
-              <Pagination
-                current={blackPage}
-                total={blacklist.length}
-                pageSize={blackPageSize}
-                onChange={(p) => setBlackPage(p)}
-                showSizeChanger={false}
-              />
-            </div>
+            <Table
+              dataSource={blacklist}
+              columns={[
+                { title: "Username", dataIndex: "username" },
+                { title: "Reason", dataIndex: "reason" },
+                {
+                  title: "Action",
+                  render: (_, r) => (
+                    <Button
+                      icon={<UserDeleteOutlined />}
+                      onClick={() => handleRemoveFromBlacklist(r)}
+                    >
+                      Remove
+                    </Button>
+                  ),
+                },
+              ]}
+              rowKey="id"
+              pagination={{ pageSize: 5 }}
+            />
           </Card>
         </Content>
       </Layout>
 
-      {/* Add / Edit Modals */}
+      {/* 添加图书弹窗 */}
       <Modal
         title="Add New Book"
         open={isAddModalVisible}
@@ -389,14 +365,18 @@ function AdminPage() {
           <Form.Item name="category" label="Category" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
+          <Form.Item name="quantity" label="Quantity" rules={[{ required: true }]}>
+            <Input type="number" min={1} />
+          </Form.Item>
         </Form>
       </Modal>
 
+      {/* 编辑图书弹窗 */}
       <Modal
         title="Edit Book"
         open={isEditModalVisible}
         onCancel={() => setIsEditModalVisible(false)}
-        onOk={handleEditBook}
+        onOk={handleUpdateBook}
         okText="Confirm Update"
       >
         <Form form={editForm} layout="vertical">
