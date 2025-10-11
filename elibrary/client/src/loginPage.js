@@ -14,33 +14,32 @@ function LoginPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // ✅ React 19 兼容的 Modal 弹窗函数
-  const showReact19Modal = (title, content) => {
+  // Compatible Modal for React 19
+  const showModal = (title, content) => {
     const div = document.createElement("div");
     document.body.appendChild(div);
     const root = ReactDOM.createRoot(div);
+    const close = () => {
+      root.unmount();
+      div.remove();
+    };
+
     root.render(
       <Modal
-        open={true}
+        open
         title={title}
         centered
         okText="OK"
         cancelButtonProps={{ style: { display: "none" } }}
-        onOk={() => {
-          root.unmount();
-          div.remove();
-        }}
-        onCancel={() => {
-          root.unmount();
-          div.remove();
-        }}
+        onOk={close}
+        onCancel={close}
       >
         <p>{content}</p>
       </Modal>
     );
   };
 
-  // ✅ 登录逻辑
+  // Handle Login
   const handleLogin = async (values) => {
     const { username, password, role } = values;
     if (!username || !password || !role) {
@@ -50,62 +49,31 @@ function LoginPage() {
 
     setLoading(true);
     try {
-      let res;
+      const loginFn = role === "student" ? studentLogin : adminLogin;
+      const res = await loginFn({ username, password });
 
-      if (role === "student") {
-        res = await studentLogin({ username, password });
-      } else if (role === "admin") {
-        res = await adminLogin({ username, password });
-      }
-
-      // ✅ 登录成功
-      if (res?.data?.id || res?.data?.username) {
+      if (res?.data?.username) {
         localStorage.setItem("user", JSON.stringify(res.data));
         message.success(`Welcome back, ${res.data.username}!`);
-
-        if (role === "student") {
-          navigate("/studentPage");
-        } else {
-          navigate("/adminPage");
-        }
+        navigate(role === "student" ? "/studentPage" : "/adminPage");
         return;
       }
 
-      // 登录失败提示
-      if (res?.error) {
-        message.error(res.error);
-      } else {
-        message.error("Login failed, please try again.");
-      }
+      message.error(res?.error || "Login failed, please try again.");
     } catch (err) {
       console.error("Login error:", err);
 
-      // ✅ 黑名单用户（Lambda 返回 403）
       if (err.response?.status === 403) {
+        // Blacklisted users
+        const raw = err.response?.data;
         let reason =
-          "Your account has been blacklisted. Login is restricted.";
-        try {
-          const raw = err.response?.data;
-          if (typeof raw === "string") {
-            const parsed = JSON.parse(raw);
-            reason = parsed?.error || parsed?.reason || reason;
-          } else if (raw?.error) {
-            reason = raw.error;
-          }
-        } catch (e) {
-          console.warn("Error parsing blacklist message:", e);
-        }
-
-        showReact19Modal("Login Restricted", reason);
-      }
-
-      // ✅ 普通密码错误
-      else if (err.response?.status === 401) {
+          typeof raw === "string"
+            ? JSON.parse(raw)?.error || "Your account is restricted."
+            : raw?.error || "Your account is restricted.";
+        showModal("Login Restricted", reason);
+      } else if (err.response?.status === 401) {
         message.error("Invalid username or password.");
-      }
-
-      // ✅ 其他错误
-      else {
+      } else {
         message.error("Login failed. Please try again later.");
       }
     } finally {
@@ -113,12 +81,10 @@ function LoginPage() {
     }
   };
 
+  // UI
   return (
     <div className="login-page-container">
-      <Card
-        className="login-card"
-        title={<h2 style={{ textAlign: "center" }}>E-Library Login</h2>}
-      >
+      <Card className="login-card" title={<h2>E-Library Login</h2>}>
         <Form layout="vertical" onFinish={handleLogin}>
           <Form.Item
             label="Username"
@@ -151,9 +117,9 @@ function LoginPage() {
             <Button
               type="primary"
               htmlType="submit"
-              block
               loading={loading}
-              style={{ marginTop: 10 }}
+              block
+              className="login-button"
             >
               Login
             </Button>

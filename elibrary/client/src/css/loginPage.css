@@ -1,144 +1,139 @@
-.loginPage-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
+.login-page-container {
   height: 100vh;
+  background: linear-gradient(135deg, #edf2ff 0%, #eaf1ff 50%, #f6fbff 100%);
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at 25% 20%, #e3eeff, #f4f8ff, #dbe8ff);
-  overflow: hidden;
-  z-index: 1;
+  padding: 24px;
+  font-size: 18px;
 }
 
-.loginPage-container > .ant-layout {
-  flex: none !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  height: 100%;
-  width: 100%;
+.login-card {
+  width: 520px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 20px;
+  box-shadow: 0 15px 45px rgba(70, 100, 255, 0.18),
+    0 0 90px rgba(180, 200, 255, 0.25);
+  padding: 36px 42px;
+  transition: all 0.4s ease;
+  animation: fadeIn 0.8s ease-out;
+  border: 2px solid transparent;
+  position: relative;
+  font-size: 18px;
 }
 
-.loginPage-container::before {
+.login-card::before {
   content: "";
   position: absolute;
-  top: -200px;
-  left: -300px;
-  width: 900px;
-  height: 900px;
-  background: radial-gradient(circle, #a8c6ff, transparent 70%);
-  filter: blur(120px);
-  opacity: 0.5;
-  z-index: 1;
-}
-
-.loginPage-glass {
-  position: relative;
-  z-index: 5;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(16px);
+  inset: 0;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 10px 40px rgba(0, 72, 255, 0.1);
-  padding: 48px 44px;
-  width: 420px;
-  max-width: 92%;
+  padding: 2px;
+  background: linear-gradient(135deg, #5a7dff, #6d5bff, #7ae2ff, #ff82c9);
+  background-size: 400% 400%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: gradientFlow 6s linear infinite;
+  z-index: 0;
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.login-card h2 {
   text-align: center;
-  animation: fadeInUp 0.6s ease;
-}
-
-.loginPage-title {
-  font-size: 26px;
+  color: #1f2b7b;
   font-weight: 700;
-  color: #003399;
-  margin-bottom: 6px;
-  letter-spacing: 0.4px;
+  font-size: 26px;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 10px rgba(90, 110, 255, 0.25);
 }
 
-.loginPage-subtitle {
-  color: #6b7280;
-  font-size: 15px;
-  margin-bottom: 28px;
-}
-
-.loginPage-form {
-  text-align: left;
-}
-
-.loginPage-form .ant-input,
-.loginPage-form .ant-input-password input {
-  height: 46px !important;
+.ant-input,
+.ant-input-password,
+.ant-select-selector {
+  font-size: 17px !important;
+  height: 50px !important;
   border-radius: 10px !important;
-  display: flex;
-  align-items: center;
-  font-size: 15px;
-}
-
-.loginPage-form .ant-input-password {
-  border-radius: 10px !important;
-}
-
-.loginPage-form .ant-input-affix-wrapper {
-  height: 46px !important;
-  border-radius: 10px !important;
-  display: flex;
-  align-items: center;
-  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ccd8ff !important;
   transition: all 0.3s ease;
-}
-
-.loginPage-form .ant-input-affix-wrapper:hover,
-.loginPage-form .ant-input-affix-wrapper-focused {
-  border-color: #005bff !important;
-  box-shadow: 0 0 0 2px rgba(0, 91, 255, 0.15);
-}
-
-.loginPage-select .ant-select-selector {
-  height: 46px !important;
-  border-radius: 10px !important;
+  padding: 0 14px !important;
   display: flex;
   align-items: center;
-  font-size: 15px;
+  box-shadow: none !important;
 }
 
-.loginPage-error {
-  color: #b91c1c;
-  background: rgba(255, 236, 236, 0.85);
-  border: 1px solid #fca5a5;
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 14px;
-  margin-bottom: 18px;
-  text-align: left;
-  animation: fadeIn 0.3s ease;
-}
-
-.loginPage-button {
-  background: linear-gradient(90deg, #005bff 0%, #3a7bff 100%) !important;
+.ant-input-password input {
+  box-shadow: none !important;
   border: none !important;
-  border-radius: 10px;
-  height: 46px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-  letter-spacing: 0.3px;
-  box-shadow: 0 8px 16px rgba(0, 72, 255, 0.25);
-  transition: all 0.25s ease;
+  outline: none !important;
+  background: transparent !important;
+  font-size: 17px !important;
+  height: 48px !important;
 }
 
-.loginPage-button:hover {
-  background: linear-gradient(90deg, #004ae6 0%, #2f6aff 100%) !important;
-  transform: translateY(-2px);
-}
-
-.loginPage-container .ant-layout,
-.loginPage-content {
+.ant-select-selector {
   display: flex !important;
-  justify-content: center !important;
   align-items: center !important;
-  height: 100%;
-  width: 100%;
-  flex: none !important;
+  height: 50px !important;
+  padding: 0 14px !important;
+}
+
+.ant-input:hover,
+.ant-input-password:hover,
+.ant-select-selector:hover {
+  border-color: #5b7cff !important;
+  box-shadow: 0 0 8px rgba(100, 150, 255, 0.4);
+}
+
+.ant-form-item-label > label {
+  color: #2d3c8a;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.login-button {
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 10px;
+  height: 50px;
+  background: linear-gradient(135deg, #648fff, #7ae2ff);
+  background-size: 300% 300%;
+  color: #fff;
+  border: none;
+  transition: all 0.4s ease;
+  animation: buttonFlow 6s linear infinite;
+  box-shadow: 0 6px 16px rgba(80, 110, 255, 0.35);
+}
+
+.login-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(70, 120, 255, 0.45);
+  background: linear-gradient(135deg, #5a7dff, #6df5ff);
+}
+
+.login-button:active {
+  transform: scale(0.97);
+}
+
+@keyframes buttonFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }

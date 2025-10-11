@@ -1,37 +1,8 @@
-// src/adminPage.js
 import React, { useEffect, useState } from "react";
-import {
-  Layout,
-  Table,
-  Button,
-  Input,
-  Select,
-  Modal,
-  Form,
-  Space,
-  Card,
-  message,
-} from "antd";
-import {
-  PlusOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  UserAddOutlined,
-  UserDeleteOutlined,
-  LogoutOutlined,
-} from "@ant-design/icons";
-import {
-  getAllBooks,
-  addBook,
-  updateBook,
-  deleteBook,
-} from "./api/bookApi";
-import {
-  getAllUsers,
-  getBlacklist,
-  addToBlacklist,
-  removeFromBlacklist,
-} from "./api/adminApi";
+import { Layout, Table, Button, Input, Select, Modal, Form, Space, Card, message } from "antd";
+import { PlusOutlined, DeleteOutlined, EditOutlined, UserAddOutlined, UserDeleteOutlined, LogoutOutlined } from "@ant-design/icons";
+import { getAllBooks, addBook, updateBook, deleteBook } from "./api/bookApi";
+import { getAllUsers, getBlacklist, addToBlacklist, removeFromBlacklist } from "./api/adminApi";
 import { useNavigate } from "react-router-dom";
 import "./css/common.css";
 import "./css/adminPage.css";
@@ -53,11 +24,9 @@ function AdminPage() {
   const [editingBook, setEditingBook] = useState(null);
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
-
-  // ✅ 新的 useModal Hook（React19 + AntD5）
   const [modal, contextHolder] = Modal.useModal();
 
-  // ---------- 封装异步确认 ----------
+  // Confirm Dialog
   const showConfirm = async (title, content) => {
     return new Promise((resolve) => {
       modal.confirm({
@@ -71,7 +40,7 @@ function AdminPage() {
     });
   };
 
-  // ---------- 初始化 ----------
+  // Initialization
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) {
@@ -94,14 +63,14 @@ function AdminPage() {
       setUsers(userRes.data || userRes || []);
       setBlacklist(blackRes.data || blackRes || []);
     } catch (err) {
-      console.error("❌ Data loading failed:", err);
+      console.error("Data loading failed:", err);
       message.error("Failed to load data.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ---------- 添加图书 ----------
+  // add book
   const handleAddBook = async () => {
     try {
       const values = await form.validateFields();
@@ -115,7 +84,7 @@ function AdminPage() {
     }
   };
 
-  // ---------- 编辑图书 ----------
+  // edit book
   const handleUpdateBook = async () => {
     try {
       const values = await editForm.validateFields();
@@ -134,7 +103,7 @@ function AdminPage() {
     }
   };
 
-  // ---------- 删除图书 ----------
+  // -delete book
   const handleDeleteBook = async (record) => {
     const confirmed = await showConfirm(
       "Confirm Delete",
@@ -151,7 +120,7 @@ function AdminPage() {
     }
   };
 
-  // ---------- 加入黑名单 ----------
+  // add to Blacklist
   const handleAddToBlacklist = async (user) => {
     const confirmed = await showConfirm(
       "Add to Blacklist",
@@ -168,7 +137,7 @@ function AdminPage() {
     }
   };
 
-  // ---------- 移出黑名单 ----------
+  // Remove from Blacklist
   const handleRemoveFromBlacklist = async (user) => {
     const confirmed = await showConfirm(
       "Remove from Blacklist",
@@ -185,14 +154,14 @@ function AdminPage() {
     }
   };
 
-  // ---------- 退出 ----------
+  // Logout 
   const handleLogout = () => {
     localStorage.removeItem("user");
     message.info("Logged out");
     navigate("/");
   };
 
-  // ---------- 搜索过滤 ----------
+  // Search Filter
   const filteredBooks = books.filter((b) => {
     const matchSearch =
       b.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -203,7 +172,7 @@ function AdminPage() {
     return matchSearch && matchCategory;
   });
 
-  // ---------- 表格列 ----------
+  // Table Columns
   const bookColumns = [
     { title: "Book Name", dataIndex: "title" },
     { title: "Author", dataIndex: "author" },
@@ -230,12 +199,10 @@ function AdminPage() {
     },
   ];
 
-  // ---------- 渲染 ----------
+  // UI
   return (
     <Layout className="adminPage-container">
-      {/* 必须插入 contextHolder 才能在 React19 中渲染 Modal */}
       {contextHolder}
-
       <Header className="common-header">
         <h1>E-Library Admin Dashboard</h1>
         <Button
@@ -249,7 +216,7 @@ function AdminPage() {
       </Header>
 
       <Layout>
-        {/* 左侧：图书管理 */}
+        {/* Book Management */}
         <Sider width="60%" className="adminPage-left">
           <Card
             title="Book Management"
@@ -295,7 +262,7 @@ function AdminPage() {
           </Card>
         </Sider>
 
-        {/* 右侧：用户与黑名单 */}
+        {/* User Management &&  Blacklist */}
         <Content className="adminPage-right">
           <Card title="User Management" style={{ marginBottom: 24 }}>
             <Table
@@ -347,7 +314,7 @@ function AdminPage() {
         </Content>
       </Layout>
 
-      {/* 添加图书弹窗 */}
+      {/* Add New Book */}
       <Modal
         title="Add New Book"
         open={isAddModalVisible}
@@ -371,7 +338,7 @@ function AdminPage() {
         </Form>
       </Modal>
 
-      {/* 编辑图书弹窗 */}
+      {/* Edit Book */}
       <Modal
         title="Edit Book"
         open={isEditModalVisible}

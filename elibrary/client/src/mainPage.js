@@ -1,52 +1,79 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Button, Input, Row, Col, Empty, message } from "antd";
-import { LoginOutlined, SearchOutlined } from "@ant-design/icons";
+import { Layout, Button, Input, Row, Col, Empty, message, Select } from "antd";
+import { LoginOutlined, SearchOutlined, DeleteOutlined, BookOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { getAllBooks } from "./api/bookApi";
 import "antd/dist/reset.css";
 import "./css/common.css";
 import "./css/mainPage.css";
-import { getAllBooks, searchBooks } from "./api/bookApi";
-import { useNavigate } from "react-router-dom";
 
 const { Header, Content } = Layout;
+const { Option } = Select;
 
 function MainPage() {
-  const [books, setBooks] = useState([]);
-  const [searchKeyword, setSearchKeyword] = useState("");
   const navigate = useNavigate();
+  const [books, setBooks] = useState([]);
+  const [allBooks, setAllBooks] = useState([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
   useEffect(() => {
     fetchBooks();
   }, []);
 
+  // Fetch all books
   const fetchBooks = async () => {
     try {
       const res = await getAllBooks();
-      if (Array.isArray(res.data)) {
-        setBooks(res.data);
-      } else {
-        message.warning("No book data received.");
-      }
-    } catch (err) {
-      console.error("Error loading books:", err);
-      message.error("Failed to connect to the server. Please try again later.");
+      const data = res.data || [];
+      setBooks(data);
+      setAllBooks(data);
+    } catch {
+      message.error("Failed to connect to server.");
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchKeyword.trim()) {
-      message.warning("Please enter a search keyword");
-      return;
+  // Search handler
+  const handleSearch = () => {
+    const keyword = searchKeyword.trim().toLowerCase();
+    let filtered = [...allBooks];
+
+    // Filter by keyword
+    if (keyword) {
+      filtered = filtered.filter(
+        (b) =>
+          b.title.toLowerCase().includes(keyword) ||
+          b.author.toLowerCase().includes(keyword)
+      );
     }
-    try {
-      const res = await searchBooks(searchKeyword);
-      setBooks(res.data || []);
-      message.success(`Found ${(res.data || []).length} books.`);
-    } catch (err) {
-      console.error("Search error:", err);
-      message.error("Search failed");
+
+    // Filter by categories
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter((b) =>
+        selectedCategories.includes(b.category)
+      );
+    }
+
+    setBooks(filtered);
+    if (filtered.length > 0) {
+      message.success(`Found ${filtered.length} matching book(s).`);
+    } else {
+      message.warning("No books matched your search.");
     }
   };
 
+  // Reset filters
+  const resetSearch = () => {
+    setSearchKeyword("");
+    setSelectedCategories([]);
+    setBooks(allBooks);
+    message.info("Filters cleared. Showing all books.");
+  };
+
+  // Extract unique categories
+  const categoryOptions = [...new Set(allBooks.map((b) => b.category))];
+
+  // UI
   return (
     <Layout className="mainPage-container">
       {/* Header */}
@@ -62,34 +89,85 @@ function MainPage() {
         </Button>
       </Header>
 
-      {/* Main Content*/}
-      <Content className="mainPage-midcontainer">
-        {/* Search Bar */}
+      {/* Main Content */}
+      <Content className="mainPage-content">
+        {/* Search Section */}
         <div className="mainPage-searchbar">
-          <Input.Search
-            placeholder="Search by title / author / category"
-            enterButton={<><SearchOutlined /> Search</>}
-            size="large"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            onSearch={handleSearch}
-            allowClear
-          />
+          <Row gutter={8} justify="center">
+            {/* Text Input */}
+            <Col xs={24} sm={9}>
+              <Input
+                placeholder="Enter book title or author"
+                size="large"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+              />
+            </Col>
+
+            {/* Category Filter */}
+            <Col xs={24} sm={7}>
+              <Select
+                mode="multiple"
+                allowClear
+                placeholder="Filter by category"
+                size="large"
+                style={{ width: "100%" }}
+                value={selectedCategories}
+                onChange={(values) => setSelectedCategories(values)}
+              >
+                {categoryOptions.map((cat) => (
+                  <Option key={cat} value={cat}>
+                    {cat}
+                  </Option>
+                ))}
+              </Select>
+            </Col>
+
+            {/* Search Button */}
+            <Col xs={12} sm={4}>
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                size="large"
+                block
+                onClick={handleSearch}
+              >
+                Search
+              </Button>
+            </Col>
+
+            {/* Clear Button */}
+            <Col xs={12} sm={4}>
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                size="large"
+                block
+                onClick={resetSearch}
+              >
+                Clear
+              </Button>
+            </Col>
+          </Row>
         </div>
 
         {/* Book List */}
         <div className="mainPage-booklist">
-          <h2>Available Books</h2>
+          <h2 className="mainPage-section-title">Available Books</h2>
           {books.length === 0 ? (
             <Empty description="No books available." />
           ) : (
             <Row gutter={[16, 16]}>
               {books.map((book) => (
                 <Col xs={24} sm={12} md={8} lg={6} key={book.id}>
-                  <div className="mainPage-booklist-card">
+                  <div className="mainPage-bookcard">
                     <h3>{book.title}</h3>
-                    <p>Author: {book.author}</p>
-                    <p>Category: {book.category}</p>
+                    <p>
+                      <strong>Author:</strong> {book.author}
+                    </p>
+                    <p>
+                      <strong>Category:</strong> {book.category}
+                    </p>
                   </div>
                 </Col>
               ))}

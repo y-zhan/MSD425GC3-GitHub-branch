@@ -1,28 +1,8 @@
 import React, { useState, useEffect } from "react";
-import {
-  Layout,
-  Table,
-  Button,
-  Input,
-  Card,
-  Modal,
-  Select,
-  message,
-  Space,
-} from "antd";
-import {
-  BookOutlined,
-  ClockCircleOutlined,
-  LogoutOutlined,
-  ExclamationCircleOutlined,
-} from "@ant-design/icons";
+import { Layout, Table, Button, Input, Card, Modal, Select, message, Space, } from "antd";
+import { BookOutlined, ClockCircleOutlined, LogoutOutlined, ExclamationCircleOutlined, } from "@ant-design/icons";
 import { getAllBooks } from "./api/bookApi";
-import {
-  borrowBook,
-  returnBook,
-  getAllBorrowRecords,
-  getBlacklist,
-} from "./api/studentApi";
+import { borrowBook, returnBook, getAllBorrowRecords, getBlacklist, } from "./api/studentApi";
 import { useNavigate } from "react-router-dom";
 import "./css/common.css";
 import "./css/studentPage.css";
@@ -31,9 +11,6 @@ import "antd/dist/reset.css";
 const { Header, Content, Sider } = Layout;
 const { Option } = Select;
 
-/**
- * ✅ 自定义确认弹窗组件
- */
 const ConfirmReturnModal = ({ open, onConfirm, onCancel, bookTitle }) => {
   return (
     <Modal
@@ -58,20 +35,15 @@ function StudentPage() {
   const [borrowedBooks, setBorrowedBooks] = useState([]);
   const [dueSoonBooks, setDueSoonBooks] = useState([]);
   const [loading, setLoading] = useState(false);
-
   const [user, setUser] = useState(null);
   const [searchKeyword, setSearchKeyword] = useState("");
-
-  // 借书弹窗控制
   const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [borrowDuration, setBorrowDuration] = useState(7);
-
-  // 还书弹窗控制
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
-  // ✅ 初始化：检查登录状态并加载数据
+  // Initialization
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) {
@@ -84,7 +56,6 @@ function StudentPage() {
     fetchAllData(parsedUser.id, parsedUser.username);
   }, []);
 
-  // ✅ 数据加载
   const fetchAllData = async (userId, username) => {
     try {
       setLoading(true);
@@ -95,7 +66,6 @@ function StudentPage() {
 
       const allBooks = bookRes.data || bookRes || [];
       const allRecords = recordRes.data || recordRes || [];
-
       const myRecords = allRecords.filter((r) => r.username === username);
 
       setBorrowedBooks(
@@ -131,17 +101,16 @@ function StudentPage() {
       setDueSoonBooks(dueSoon);
       setBooks(allBooks.filter((b) => b.available));
     } catch (err) {
-      console.error("❌ Fetch error:", err);
+      console.error("Fetch error:", err);
       message.error("Failed to load data.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ 借书弹窗
   const handleBorrowClick = async (book) => {
     try {
-      // 黑名单检测
+      // check blacklist first
       const blacklistRes = await getBlacklist();
       const list = blacklistRes.data || [];
       const isBlacklisted = list.some((u) => u.username === user.username);
@@ -162,7 +131,7 @@ function StudentPage() {
     }
   };
 
-  // ✅ 确认借书
+  // borrow
   const handleBorrowConfirm = async () => {
     if (!user || !selectedBook?.id) {
       message.warning("Please re-login before borrowing.");
@@ -193,14 +162,12 @@ function StudentPage() {
     }
   };
 
-  // ✅ 打开还书确认弹窗
   const handleReturnBook = (record) => {
-    console.log("🟨 Return clicked:", record);
+    console.log("Return clicked:", record);
     setSelectedRecord(record);
     setIsReturnModalOpen(true);
   };
 
-  // ✅ 确认还书操作（真正触发 PUT 请求）
   const handleConfirmReturn = async () => {
     const record = selectedRecord;
     if (!record?.id) {
@@ -209,24 +176,23 @@ function StudentPage() {
     }
 
     try {
-      console.log("📡 Sending PUT request for record:", record.id);
+      console.log("Sending PUT request for record:", record.id);
       const res = await returnBook(record.id);
-      console.log("✅ Lambda response:", res);
+      console.log("Lambda response:", res);
 
       if (res?.message?.includes("returned successfully")) {
-        message.success(`"${record.title}" returned successfully ✅`);
+        message.success(`"${record.title}" returned successfully`);
         setIsReturnModalOpen(false);
         fetchAllData(user.id, user.username);
       } else {
         message.error(res?.error || "Return failed");
       }
     } catch (err) {
-      console.error("❌ Return error:", err);
+      console.error("Return error:", err);
       message.error("Failed to return the book.");
     }
   };
 
-  // ✅ 搜索过滤
   const filteredBooks = books.filter((b) => {
     const keyword = searchKeyword.toLowerCase();
     return (
@@ -236,14 +202,13 @@ function StudentPage() {
     );
   });
 
-  // ✅ 登出
+  // logout
   const handleLogout = () => {
     localStorage.removeItem("user");
     message.info("Logged out");
     navigate("/");
   };
 
-  // ✅ 表格列定义
   const bookColumns = [
     { title: "Book Name", dataIndex: "title", key: "title" },
     { title: "Author", dataIndex: "author", key: "author" },
@@ -287,7 +252,7 @@ function StudentPage() {
     },
   ];
 
-  // ✅ 页面布局
+  //  UI
   return (
     <Layout className="studentPage-container">
       <Header className="common-header">

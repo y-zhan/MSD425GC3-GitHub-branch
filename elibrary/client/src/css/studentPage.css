@@ -164,3 +164,9 @@
   color: #1677ff;
   font-weight: 600;
 }
+
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused {
+  outline: none !important;
+  box-shadow: none !important;
+}
