@@ -1,0 +1,67 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.common-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 60px;
+  background: linear-gradient(120deg, #4b6bff 0%, #6a88ff 50%, #7de1ff 100%);
+  box-shadow: 0 6px 20px rgba(40, 80, 255, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+
+.common-header h1 {
+  font-size: 40px;
+  font-weight: 800;
+  font-style: italic;
+  color: #d8e9ff;
+  letter-spacing: 1px;
+  margin: 0;
+  transition: all 0.4s ease;
+}
+
+.mainPage-loginbutton {
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 28px;
+  background: linear-gradient(135deg, #64a8ff 0%, #4b6bff 50%, #7de1ff 100%);
+  background-size: 300% 300%;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(50, 100, 255, 0.35);
+  transition: all 0.4s ease;
+  animation: buttonGradientFlow 6s ease infinite;
+}
+
+/* Gradient Flow Animation */
+@keyframes buttonGradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.mainPage-loginbutton:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(70, 120, 255, 0.45);
+  background: linear-gradient(135deg, #5ab0ff 0%, #4768ff 60%, #6df5ff 100%);
+}
+
+.mainPage-loginbutton:active {
+  transform: scale(0.98);
+  box-shadow: 0 4px 8px rgba(50, 90, 255, 0.4);
+}

@@ -1,0 +1,172 @@
+.studentPage-container {
+  height: 100vh;
+  background: linear-gradient(135deg, #eef3ff 0%, #e4edff 50%, #f5f8ff 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.studentPage-container > .ant-layout {
+  flex: 1;
+  display: flex;
+  gap: 24px;
+  padding: 24px 40px;
+  overflow: hidden;
+}
+
+.studentPage-left {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 72, 255, 0.08);
+  padding: 24px;
+  overflow: hidden;
+  position: relative;
+}
+
+.studentPage-left .ant-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-bottom: 72px;
+}
+
+.studentPage-search-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.studentPage-search-area input,
+.studentPage-search-area .ant-select {
+  border-radius: 8px;
+  height: 38px;
+}
+
+.studentPage-table-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+.studentPage-table-wrapper .ant-table-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.studentPage-pagination {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: calc(100% - 80px);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+}
+
+.studentPage-table-wrapper .ant-table-thead > tr > th:nth-child(1),
+.studentPage-table-wrapper .ant-table-tbody > tr > td:nth-child(1) {
+  width: 35%;
+}
+.studentPage-table-wrapper .ant-table-thead > tr > th:nth-child(2),
+.studentPage-table-wrapper .ant-table-tbody > tr > td:nth-child(2) {
+  width: 25%;
+}
+.studentPage-table-wrapper .ant-table-thead > tr > th:nth-child(3),
+.studentPage-table-wrapper .ant-table-tbody > tr > td:nth-child(3) {
+  width: 25%;
+}
+.studentPage-table-wrapper .ant-table-thead > tr > th:nth-child(4),
+.studentPage-table-wrapper .ant-table-tbody > tr > td:nth-child(4) {
+  width: 15%;
+  text-align: center;
+}
+
+.ant-table-thead > tr > th {
+  background: #f0f5ff !important;
+  color: #003a8c !important;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.ant-table-tbody > tr > td {
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: #f7faff !important;
+  transition: background 0.25s ease;
+}
+
+.studentPage-right {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.studentPage-righttop,
+.studentPage-rightbottom {
+  flex: 1;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 72, 255, 0.08);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.studentPage-righttop .ant-card,
+.studentPage-rightbottom .ant-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.studentPage-righttop .ant-table-wrapper,
+.studentPage-rightbottom .ant-table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.ant-card-head {
+  background: #f3f7ff;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  padding: 10px 16px;
+}
+
+.ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.due-danger {
+  color: #ff4d4f;
+  font-weight: 600;
+}
+.due-normal {
+  color: #1677ff;
+  font-weight: 600;
+}
+
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused {
+  outline: none !important;
+  box-shadow: none !important;
+}
