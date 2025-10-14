@@ -56,7 +56,7 @@ def lambda_handler(event, context):
         # ======================= [GET] =======================
         if method == "GET":
 
-            # ---------- ✅ 图书搜索 ----------
+            # ---------- 图书搜索 ----------
             if "/books/search" in path:
                 query_params = event.get("queryStringParameters") or {}
                 keyword = query_params.get("keyword", "").strip()
@@ -120,7 +120,7 @@ def lambda_handler(event, context):
                 if not user:
                     return cors_response(401, {"error": "Invalid username or password"})
 
-                # ✅ 黑名单检测
+                # 黑名单检测
                 cursor.execute("SELECT * FROM blacklist WHERE user_id=%s", (user["id"],))
                 blacklisted = cursor.fetchone()
                 if blacklisted:
